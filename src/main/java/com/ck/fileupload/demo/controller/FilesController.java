@@ -1,5 +1,7 @@
 package com.ck.fileupload.demo.controller;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,8 +49,10 @@ public class FilesController {
   public ResponseEntity<List<FileInfo>> getListFiles() {
     List<FileInfo> fileInfos = storageService.loadAll().map(path -> {
       String filename = path.getFileName().toString();
+      String fileEncoded = path.getFileName().toString().replace(" ", "%20");
+
       String url = MvcUriComponentsBuilder
-          .fromMethodName(FilesController.class, "getFile", path.getFileName().toString()).build().toString();
+          .fromMethodName(FilesController.class, "getFile", fileEncoded).build().toString();
 
       return new FileInfo(filename, url);
     }).collect(Collectors.toList());
@@ -60,7 +64,9 @@ public class FilesController {
   @ResponseBody
   public ResponseEntity<Resource> getFile(@PathVariable String filename) {
     Resource file = storageService.load(filename);
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"").body(file);
+    return ResponseEntity
+        .ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+        .body(file);
   }
 }
